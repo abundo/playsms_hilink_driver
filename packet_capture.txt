@@ -1,0 +1,215 @@
+Captured packets in the USB modem built-in web interface
+
+# ----- get sms count --------------------------------------------------------
+
+GET /api/sms/sms-count HTTP/1.1
+Host: 192.168.8.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.8.1/html/smsinbox.html
+X-Requested-With: XMLHttpRequest
+Cookie: SessionID=AVZqwDQUT0dkkX7+ncTSlLmBCrDN3NPHamaI0xDHFhxvIaxNj3AittFjJWVZIo0DgtV/0Na5xCTfifzCUYiST6weJx6qRTcdgZPkYwt3qAsg0xAMjcNgDBi2tdcez5vK
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Date: Thu, 01 Jan 1970 00:00:00 GMT
+Server: WebServer
+Connection: keep-alive
+Keep-Alive: timeout=10, max=100
+X-Download-Options: noopen
+X-Frame-Options: deny
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubdomains
+Cache-Control: no-cache
+Content-Type: text/html
+Content-Length: 399
+
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+	<LocalUnread>2</LocalUnread>
+	<LocalInbox>2</LocalInbox>
+	<LocalOutbox>21</LocalOutbox>
+	<LocalDraft>0</LocalDraft>
+	<LocalDeleted>0</LocalDeleted>
+	<SimUnread>0</SimUnread>
+	<SimInbox>0</SimInbox>
+	<SimOutbox>0</SimOutbox>
+	<SimDraft>0</SimDraft>
+	<LocalMax>500</LocalMax>
+	<SimMax>20</SimMax>
+	<SimUsed>0</SimUsed>
+	<NewMsg>0</NewMsg>
+</response>
+
+
+# ----- list sms messages ----------------------------------------------------
+
+POST /api/sms/sms-list HTTP/1.1
+Host: 192.168.8.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.8.1/html/smsinbox.html
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+__RequestVerificationToken: 8LdNQXqVyCCCarswqtcE3XZjUnpVvSV5
+X-Requested-With: XMLHttpRequest
+Content-Length: 208
+Cookie: SessionID=AVZqwDQUT0dkkX7+ncTSlLmBCrDN3NPHamaI0xDHFhxvIaxNj3AittFjJWVZIo0DgtV/0Na5xCTfifzCUYiST6weJx6qRTcdgZPkYwt3qAsg0xAMjcNgDBi2tdcez5vK
+Connection: keep-alive
+
+<?xml version="1.0" encoding="UTF-8"?><request><PageIndex>1</PageIndex><ReadCount>20</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>0</UnreadPreferred></request>HTTP/1.1 200 OK
+Date: Thu, 01 Jan 1970 00:00:00 GMT
+Server: WebServer
+Connection: close
+X-Download-Options: noopen
+X-Frame-Options: deny
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubdomains
+Cache-Control: no-cache
+Content-Type: text/html
+Content-Length: 1132
+__RequestVerificationToken:3pE0zbFV5DRi9kHyw4TOkEXNaq+EJik1
+
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+	<Count>4</Count>
+	<Messages>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40028</Index>
+			<Phone>+46722060322</Phone>
+			<Content>I have </Content>
+			<Date>2018-02-13 23:47:24</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40027</Index>
+			<Phone>+46722060322</Phone>
+			<Content>Jippi</Content>
+			<Date>2018-02-13 23:40:37</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40002</Index>
+			<Phone>+46722060322</Phone>
+			<Content>Aaa</Content>
+			<Date>2018-02-13 11:30:44</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40001</Index>
+			<Phone>+46722060322</Phone>
+			<Content>Hello</Content>
+			<Date>2018-02-13 11:10:58</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+	</Messages>
+</response>
+
+
+# ----- semd sms message -----------------------------------------------------
+
+POST /api/sms/send-sms HTTP/1.1
+Host: 192.168.8.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.8.1/html/smsinbox.html
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+__RequestVerificationToken: QtFLiIMlWGSUVmn/++Vdu7zwp2IAQb6k
+X-Requested-With: XMLHttpRequest
+Content-Length: 236
+Cookie: SessionID=AVZqwDQUT0dkkX7+ncTSlLmBCrDN3NPHamaI0xDHFhxvIaxNj3AittFjJWVZIo0DgtV/0Na5xCTfifzCUYiST6weJx6qRTcdgZPkYwt3qAsg0xAMjcNgDBi2tdcez5vK
+Connection: keep-alive
+
+<?xml version="1.0" encoding="UTF-8"?><request><Index>-1</Index><Phones><Phone>0722060322</Phone></Phones><Sca></Sca><Content>test ............</Content><Length>11</Length><Reserved>1</Reserved><Date>2018-02-13 22:21:30</Date></request>HTTP/1.1 200 OK
+Date: Thu, 01 Jan 1970 00:00:00 GMT
+Server: WebServer
+Connection: close
+X-Download-Options: noopen
+X-Frame-Options: deny
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubdomains
+Cache-Control: no-cache
+Content-Type: text/html
+Content-Length: 65
+__RequestVerificationToken:8J1sih0IXrvwY8q1TRYj+uDjLOo7OjLb
+
+<?xml version="1.0" encoding="UTF-8"?>
+<response>OK</response>
+
+
+# ----- get sms send status --------------------------------------------------
+
+GET /api/sms/send-status HTTP/1.1
+Host: 192.168.8.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.8.1/html/smsinbox.html
+X-Requested-With: XMLHttpRequest
+Cookie: SessionID=AVZqwDQUT0dkkX7+ncTSlLmBCrDN3NPHamaI0xDHFhxvIaxNj3AittFjJWVZIo0DgtV/0Na5xCTfifzCUYiST6weJx6qRTcdgZPkYwt3qAsg0xAMjcNgDBi2tdcez5vK
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Date: Thu, 01 Jan 1970 00:00:00 GMT
+Server: WebServer
+Connection: keep-alive
+Keep-Alive: timeout=10, max=100
+X-Download-Options: noopen
+X-Frame-Options: deny
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubdomains
+Cache-Control: no-cache
+Content-Type: text/html
+Content-Length: 188
+
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+	<Phone></Phone>
+	<SucPhone>0722060322</SucPhone>
+	<FailPhone></FailPhone>
+	<TotalCount>1</TotalCount>
+	<CurIndex>1</CurIndex>
+</response>
+
+# ----- Delete message -------------------------------------------------------
+
+POST /api/sms/send-sms HTTP/1.1
+Host: 192.168.8.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.8.1/html/smsinbox.html
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+__RequestVerificationToken: QtFLiIMlWGSUVmn/++Vdu7zwp2IAQb6k
+X-Requested-With: XMLHttpRequest
+Content-Length: 236
+Cookie: SessionID=AVZqwDQUT0dkkX7+ncTSlLmBCrDN3NPHamaI0xDHFhxvIaxNj3AittFjJWVZIo0DgtV/0Na5xCTfifzCUYiST6weJx6qRTcdgZPkYwt3qAsg0xAMjcNgDBi2tdcez5vK
+Connection: keep-alive
+
+<?xml version="1.0" encoding="UTF-8"?><request><Index>-1</Index><Phones><Phone>0722060322</Phone></Phones><Sca></Sca><Content>test ............</Content><Length>11</Length><Reserved>1</Reserved><Date>2018-02-13 22:21:30</Date></request>
+
+
+"""

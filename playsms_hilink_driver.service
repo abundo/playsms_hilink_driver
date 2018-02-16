@@ -1,0 +1,44 @@
+# Description:
+#   systemd autostart of the hilink_driver
+#
+#   Copy this file to /lib/systemd/system
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable playsms_hilink_driver.service
+#   sudo systemctl start playsms_hilink_driver.service
+#
+# License:
+#   Copyright 2017 Anders Löwinger, anders@abundo.se
+#
+#   This file is part of playsms_hilink_driver.
+#
+#   playsms_hilink_driver is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   playsms_hilink_driver is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with playsms_hilink_driver.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+[Unit]
+Description=Hilink USB modem driver daemon
+After=multi-user.target
+
+[Service]
+Type=idle
+User=hilink_driver
+Group=hilink_driver
+ExecStart=/usr/bin/python3 /opt/playsms_hilink_driver/playsms_hilink_driver.py --server
+WorkingDirectory=/opt/playsms_hilink_driver
+
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

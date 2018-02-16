@@ -1,0 +1,15 @@
+---
+http_server:
+  port: 8888
+
+playsms:
+  # Callback is used to insert received SMS into playsms
+  callback: "http://10.10.80.129/playsms/plugin/gateway/generic/callback.php?"
+
+
+modem:
+  base_url: "http://192.168.8.1"
+  cookie_url: '/html/index.html'
+
+log:
+  level: INFO      # CRITICAL, ERROR, WARNING, INFO, DEBUG
