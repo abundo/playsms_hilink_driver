@@ -50,8 +50,8 @@ It is important that the playsms-callback URL is correct.
 ### Enable and start service
 
     sudo systemctl daemon-reload
-    sudo systemctl enable hilink_driver
-    sudo systemctl start hilink_driver
+    sudo systemctl enable playsms_hilink_driver
+    sudo systemctl start playsms_hilink_driver
 
 
 ### Configuration of playsms
