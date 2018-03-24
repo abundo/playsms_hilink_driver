@@ -21,8 +21,6 @@ License:
 
   You should have received a copy of the GNU General Public License
   along with playsms_hilink_driver.  If not, see <http://www.gnu.org/licenses/>.
-
-
 """
 
 import os
@@ -45,17 +43,12 @@ from orderedattrdict import AttrDict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 
-
-conf = AttrDict()
+from lib_log import log
+from lib_usb_modem import USB_modem
 
 # ----- start of configuration ------------------------------------------------
 
 CONFIG_FILE = "/etc/playsms_hilink_driver/config.yaml"
-
-# conf.http_server_port = 8888
-# conf.modem_base_url = "http://192.168.8.1"
-# conf.modem_cookie_url = '/html/index.html'
-
 
 # ----- Helper functions -----------------------------------------------------
 
@@ -89,7 +82,6 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=AttrDict):
 def yaml_load(filename):
     with open(filename, "r") as f:
         try:
-            # self.default_data = yaml.load(f)
             data = ordered_load(f, yaml.SafeLoader)
             return data
         except yaml.YAMLError as err:
@@ -100,40 +92,38 @@ def yaml_load(filename):
 
 conf = yaml_load(CONFIG_FILE)
 
-
-# ----- setup logging, console or syslog if run as daemon --------------------
-
-log = logging.getLogger('hilink_driver')
 log.setLevel(conf.log.level)
 
-# remove all handlers
-for hdlr in log.handlers:
-    log.removeHandler(hdlr)
+usb_modem = USB_modem()
 
-if sys.stdout.isatty():
-    consolehandler = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-    consolehandler.setFormatter(formatter)
-    log.addHandler(consolehandler)
-else:
-    syslogger = logging.handlers.SysLogHandler(address='/dev/log')
-    formatter = logging.Formatter('%(module)s: %(levelname)s %(message)s')
-    syslogger.setFormatter(formatter)
-    log.addHandler(syslogger)
-
-
-# ----- end of logging setup -------------------------------------------------
 
 class PlaySMS:
     """
     Handle communication to/from PlaySMS
     """
     def __init__(self):
-        pass
+        self.thread = threading.Thread(target=self.background_poller, args=())
+        self.thread.daemon = True
+        self.thread.start()
+
+    
+    def background_poller(self):
+        """
+        Separate thread, that periodically polls modem for new messages
+        """
+        while True:
+            messages = usb_modem.list_received_sms()
+            for message in messages:
+                log.info("Received SMS index: %s  from: %s  message: %s" % (message.Index, message.Phone, message.Content))
+                playsms.insert_sms_into_playsms(id=message.Index, from_=message.Phone, text=message.Content)
+                usb_modem.delete_sms(message.Index)
+            time.sleep(10)
+            
     
     def insert_sms_into_playsms(self, id=None, from_=None, to=None, text=None):
 #        http://10.10.80.129/playsms/plugin/gateway/generic/callback.php?
-#        \&from=0722060322\&message=nisse\&to=46705747187\&smsc=generic
+#        &from=0722060322&message=nisse&to=46705747187&smsc=generic
+
         data = AttrDict()
         data.id = id
         data.authcode = "fc5fc18a232c42cf17a5be44f5a018314422505d"
@@ -141,171 +131,28 @@ class PlaySMS:
         data.message = text
         data.to = "+46705747187"
         data.smsc = 'generic'
+        
+        headers = {
+            'Content-Type'    : 'application/x-www-form-urlencoded',
+            'charset'        : 'UTF-8',
+            'Accept'        : 'application/json',
+            }
+        
+        url = "http://127.0.0.1/playsms/plugin/gateway/generic/callback.php?"
+        r = requests.post(url, headers=headers, data=data, timeout=10)
+        return r
 
-        url = "http://10.10.80.129/playsms/plugin/gateway/generic/callback.php?"
-        url += urllib.parse.urlencode(data, encoding='utf-8')
-        ret = requests.get(url=url).text
-        return ret
+#        url += urllib.parse.urlencode(data, encoding='utf-8')
+#        url += urllib.parse.urlencode(data)
+#        ret = requests.get(url=url).text
+#        return ret
     
     def sms_from_playsms(self):
         pass
 
+
 playsms = PlaySMS()
 
-class USB_modem:
-    """
-    Class to manage the USB modem via hilink
-    
-    Starts a background process, that periodically polls the modem
-    for new SMS. When a SMS is received, it is forwarded to playsms
-    """
-
-    def __init__(self):
-        self.session = requests.Session()
-        r = self.session.get(conf.modem.base_url + conf.modem.cookie_url)
-
-        # Start background thread, polling for received SMS
-        self.thread = threading.Thread(target=self.poll_receive_sms, args=())
-        self.thread.daemon = True
-        self.thread.start()
-
-
-    def get_session(self):
-        """
-        All communication with the USB modem needs a valid session
-        """
-        session_token = xmltodict.parse(self.session.get(conf.modem.base_url +\
-            "/api/webserver/SesTokInfo").text).get('response',None)
-        session = session_token.get("SesInfo")  #cookie
-        token = session_token.get("TokInfo") #token
-        return session, token
-    
-
-    def get_sms_list(self):
-        """
-        Return a list with up to 10 received SMSes
-        """
-        session, token = self.get_session()
-        headers = {
-            'Cookie': session, 
-            '__RequestVerificationToken': token, 
-            }
-
-        api_url = conf.modem.base_url + "/api/sms/sms-list"
-        post_data =  b""
-        post_data += b'<?xml version="1.0" encoding="UTF-8"?>\n'
-        post_data += b"<request>\n"
-        post_data += b"  <PageIndex>1</PageIndex>\n"
-        post_data += b"  <ReadCount>10</ReadCount>\n"
-        post_data += b"  <BoxType>1</BoxType>"
-        post_data += b"  <SortType>0</SortType>"
-        post_data += b"  <Ascending>0</Ascending>"
-        post_data += b"  <UnreadPreferred>0</UnreadPreferred>"
-        post_data += b"</request>\n"
-        
-        ret = self.session.post(url=api_url, data=post_data, headers=headers).text
-        data = xmltodict.parse(ret)
-        ret_messages = []
-
-        if 'Messages' in data['response']:
-            messages = data['response']['Messages']
-            if messages is not None:
-                message_list = messages['Message']
-
-                # If we only have one message, it is not returned as a list
-                # so it cannot be iterated over, convert to list.
-                if not isinstance(message_list, list):
-                    message_list = [ message_list ]
-
-                for message in message_list:
-                    if message['SmsType'] == '1':
-                        msg = AttrDict()
-                        for attr in ['Index', 'Phone', 'SmsType', 'Content']:
-                            msg[attr] = message[attr]
-                        ret_messages.append(msg)
-        return ret_messages
-
-
-    def delete_sms(self, index):
-        """
-        Delete a SMS from the modem.
-        """
-        log.info("Delete SMS with index %s" % index)
-        session, token = self.get_session()
-        headers = {
-            'Cookie': session, 
-            '__RequestVerificationToken': token, 
-            }
-        api_url = conf.modem.base_url + "/api/sms/delete-sms"
-        post_data = b""
-        post_data += b'<?xml version="1.0" encoding="UTF-8"?>\n'
-        post_data += b"<request>\n"
-        post_data += b"  <Index>%s</Index>\n" % index.encode()
-        post_data += b"</request>\n"
-        ret = self.session.post(url=api_url, data=post_data, headers=headers).text
-        data = xmltodict.parse(ret)
-        return data
-
-
-    def poll_receive_sms(self):
-        """
-        Runs as a separate thread, polling for new SMS
-        All recevied SMSes are inserted into playsms, then deleted from the modem
-        """
-        while True:
-            messages = self.get_sms_list()
-            for message in messages:
-                log.info("Received SMS index: %s  from: %s  message: %s" % (message.Index, message.Phone, message.Content))
-                playsms.insert_sms_into_playsms(id=message.Index, from_=message.Phone, text=message.Content)
-                self.delete_sms(message.Index)
-            time.sleep(10)
-
-
-    def send_sms(self, numbers=None, text=None):
-        log.info("Sending SMS, number: %s  message: %s" % ( ",".join(numbers), text))
-        session, token = self.get_session()
-        api_url = conf.modem.base_url + "/api/sms/send-sms"
-        length = str(len(text))
-        headers = {
-            'Cookie': session, 
-            '__RequestVerificationToken': token,
-             "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"
-            }
-
-        # Build XML structure
-        post_data = b""
-        post_data += b'<?xml version="1.0" encoding="UTF-8"?>\n'
-        post_data += b"<request>\n"
-        post_data += b"  <Index>-1</Index>\n"
-        post_data += b"  <Phones>\n"
-        for number in numbers:
-            post_data += b"    <Phone>%s</Phone>\n" % number.encode()
-        post_data += b"  </Phones>\n"
-        post_data += b"  <Sca></Sca>\n"
-        post_data += b"  <Content>%s</Content>\n" % text.encode()
-        post_data += b"  <Length>%s</Length>\n" % str(length).encode()
-        post_data += b"  <Reserved>1</Reserved>\n"
-        post_data += b"  <Date>%s</Date>\n" % now_str().encode()
-        post_data += b"</request>\n"
-        
-        ret = self.session.post(url=api_url, data=post_data, headers=headers).text
-        return xmltodict.parse(ret)
-
-
-usb_modem = USB_modem()
-
-if 0:
-    if 1:
-        messages = usb_modem.get_sms_list()
-        print(messages)
-        #if len(messages) > 0:
-        #    ret = usb_modem.delete_sms(messages[0].Index)
-        sys.exit(1)
-
-    if 0:
-        ret = usb_modem.send_sms(numbers=['0722060322'], text="räksmörgås RÄKSMÖRGÅS")
-        print("ret", ret)
-        sys.exit(1)
 
 class RequestHandler(BaseHTTPRequestHandler):
     """
@@ -344,8 +191,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             args = urllib.parse.parse_qs(query, encoding='utf-8')
             text = args["message"][0]
             numbers = args["msisdn"]
-            ret = usb_modem.send_sms(numbers=numbers, text=text)
-            return self._return_json(200, "OK")
+            index = usb_modem.send_sms(numbers=numbers, text=text)
+            return self._return_json(200, "%s OK" % index)
                 
         return self._return(401, "Unknown API call\n")
 
